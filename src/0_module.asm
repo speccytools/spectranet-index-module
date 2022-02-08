@@ -1,22 +1,5 @@
-global _gdbserver_state
-global t_rst8_handler
-global __debug_framepointer
-global CONSOLE_ROWS
-global CONSOLE_COLUMNS
-global __SYSVAR_BORDCR
-global _clear42
-global _print42
-global module_header
-global nmi_handler
-extern gdbserver_install
 
 include "../include/spectranet.inc"
-
-defc INITIAL_SP = 0xFFFF
-defc __SYSVAR_BORDCR = 23624
-defc CONSOLE_ROWS = 24
-defc CONSOLE_COLUMNS = 40
-defc __debug_framepointer = 0x3B00
 
 module_header:
     org 0x2000
@@ -52,6 +35,6 @@ STR_identity:
 
 gdbserver_run:
     call STATEMENT_END              ; Check for statement end.
-    ld hl, STR_identity
-    call PRINT42
+    extern _main
+    call _main
     jp EXIT_SUCCESS

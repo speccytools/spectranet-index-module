@@ -50,7 +50,7 @@ get-size:
 	@cat build/spectranet-index.map | sed -n "s/^\\([a-zA-Z0-9_]*\\).*= .\([A-Z0-9]*\) ; \([^,]*\), .*/\2,\1,\3/p" | sort | python3 tools/symbol_sizes.py
 
 deploy:
-	ethup 127.0.0.1 build/spectranet-index
+	ethup 192.168.88.61 build/spectranet-index__.bin
 
 clean:
 	@rm -rf build/*
