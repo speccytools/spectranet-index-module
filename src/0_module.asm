@@ -13,9 +13,6 @@ module_header:
     defw 0xFFFF             ; Reserved
     defw STR_identity       ; Address of the identity string.
 
-modulecall:
-    ret
-
 STR_spectranet_index:
     defb "%index", 0
 
@@ -35,6 +32,6 @@ STR_identity:
 
 gdbserver_run:
     call STATEMENT_END              ; Check for statement end.
-    extern _main
-    call _main
+    extern _modulecall
+    call _modulecall
     jp EXIT_SUCCESS

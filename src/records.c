@@ -1,0 +1,116 @@
+#include "records.h"
+#include <string.h>
+
+__at (32768) struct name_info_t name_info;
+
+void records_init()
+{
+    name_info.free_mem = name_info.mem;
+    name_info.free_mem_remaining = FREE_MEM_BUFFER_SIZE;
+    name_info.indexes_count = 0;
+    name_info.first_record = NULL;
+    name_info.last_record = NULL;
+}
+
+static void* _alloc(uint8_t size) __FASTCALL__
+{
+    if (size > name_info.free_mem_remaining)
+    {
+        return 0;
+    }
+
+    void* result = (void*)name_info.free_mem;
+    name_info.free_mem += size;
+    name_info.free_mem_remaining -= size;
+
+    return result;
+}
+
+char* _strdup(const char* from) __FASTCALL__
+{
+    if (from == NULL)
+    {
+        return NULL;
+    }
+    char* res = _alloc(strlen(from) + 1);
+    if (res == NULL)
+    {
+        return NULL;
+    }
+    strcpy(res, from);
+    return res;
+}
+
+void add_index(const char* host) __FASTCALL__
+{
+    if (host == NULL)
+    {
+        return;
+    }
+    if (name_info.indexes_count >= MAX_INDEXES)
+    {
+        return;
+    }
+    struct record_index_t* i = &name_info.indexes[name_info.indexes_count++];
+    i->resolved = 0;
+    strcpy(i->host, host);
+}
+
+struct record_t* find_record(const char* host) __FASTCALL__
+{
+    struct record_t* record = name_info.first_record;
+
+    while (record)
+    {
+        if (strcmp(record->host, host) == 0)
+        {
+            return record;
+        }
+
+        record = record->next;
+    }
+
+    return NULL;
+}
+
+struct record_t* add_record(enum record_type_t type, const char* host) __CALLEE__
+{
+    if (host == NULL)
+    {
+        return NULL;
+    }
+
+    struct record_t* record = find_record(host);
+
+    if (record != NULL)
+    {
+        record->type = type;
+        return record;
+    }
+
+    record = (struct record_t*)_alloc(sizeof(struct record_t));
+    if (record == NULL)
+    {
+        return NULL;
+    }
+
+    record->type = type;
+    record->host = _strdup(host);
+    record->title = NULL;
+    record->tags = NULL;
+    record->next = NULL;
+
+    if (name_info.last_record == NULL)
+    {
+        name_info.first_record = record;
+    }
+    else
+    {
+        name_info.last_record->next = record;
+    }
+
+
+    name_info.last_record = record;
+
+    return record;
+}

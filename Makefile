@@ -17,6 +17,7 @@ ifneq (,$(JUST_PRINT))
 else
 	CC = zcc
 	LD = zcc
+	DEBUG = -debug
 	CFLAGS = +zx $(DEBUG) $(INCLUDES)
 	LINK_FLAGS = -L$(ROOT_DIR)/libs -llibs/libsocket_np.lib -llibs/libspectranet_np.lib
 	BIN_FLAGS = -startup=31 --no-crt -subtype=bin
