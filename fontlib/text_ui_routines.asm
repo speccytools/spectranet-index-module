@@ -1,7 +1,7 @@
 EXTERN asm_zx_cxy2saddr
+EXTERN asm_zx_cxy2aaddr
 
-defc _text_x = 32768
-defc _text_y = 32769
+defc text_color = 32768
 
 org 0x1000
 
@@ -13,12 +13,32 @@ org 0x1000
 ;     de - current characted data address
 ;     bc - current string address
 _text_ui_write:
-    pop hl                          ; ret
-    pop ix                          ; pop the amount into ix
-    pop bc                          ; pop string address into bc
-    push hl                         ; ret
+    pop de                          ; ret
 
-    call _text_ui_get_screen_addr   ; hl now holds a screen address
+    pop ix                          ; pop the amount into ix
+
+    pop bc                          ; y
+    ld h, c
+    pop bc
+    ld l, c                         ; x
+
+    push hl                         ; preserve yx for asm_zx_cxy2aaddr
+    call asm_zx_cxy2aaddr           ; get color data addr
+    ld c, ixl                       ; get chars amount into ixl
+    inc c                           ; divide it in half
+    rr c                            ; with round top
+    ld a, (text_color)
+
+_text_ui_write_color_loop:          ; fill up color info
+    ld (hl), a
+    inc hl
+    dec c
+    jr nz, _text_ui_write_color_loop
+
+    pop hl                          ; restore hl to yx
+    call asm_zx_cxy2saddr           ; hl now holds a screen address
+    pop bc                          ; pop string address into bc
+    push de                         ; ret
 
 _text_ui_write_loop:
     ; even
@@ -74,13 +94,6 @@ _text_ui_write_loop:
     dec ixl                         ; do we have more to print?
     ret z                           ; we're done
     jp _text_ui_write_loop
-
-_text_ui_get_screen_addr:
-    ld a, (_text_x)                 ; get initial screen address
-    ld l, a
-    ld a, (_text_y)
-    ld h, a
-    jp asm_zx_cxy2saddr             ; hl now holds a screen address
 
 font:
     binary "font_4x8_80columns.bin"

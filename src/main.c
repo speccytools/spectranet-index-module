@@ -30,9 +30,9 @@ static void resolve()
                 continue;
             }
 
-            char* data = 0x1000;
             char* ptr = resolve_txt_records(current_index->host);
 
+            char* data = 0x1000;
             while (data < ptr)
             {
                 uint8_t txt_len = strlen(data);
@@ -127,7 +127,7 @@ void modulecall()
     text_color = INK_CYAN | PAPER_BLACK;
     while (record)
     {
-        text_ui_write_at(1, y++, record->host, strlen(record->host));
+        text_ui_write(record->host, 1, y++, strlen(record->host));
         record = record->next;
     }
 }
