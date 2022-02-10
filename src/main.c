@@ -1,6 +1,9 @@
 #include "extern.h"
 #include <strings.h>
+#include <arch/zx/spectrum.h>
+#include <compress/zx7.h>
 #include "records.h"
+#include "text.h"
 
 enum resolve_record_key_t {
     RESOLVE_KEY_TYPE = 0,
@@ -118,14 +121,13 @@ void modulecall()
     add_index("index.speccytools.org");
     resolve();
 
+    text_pagein();
     struct record_t* record = name_info.first_record;
+    uint8_t y = 4;
+    text_color = INK_CYAN | PAPER_BLACK;
     while (record)
     {
-        print42("HOST ");
-        print42(record->host);
-        print42("TITLE ");
-        print42(record->title);
-        print42("\n");
+        text_ui_write_at(1, y++, record->host, strlen(record->host));
         record = record->next;
     }
 }

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define MAX_INDEXES (8)
-#define FREE_MEM_BUFFER_SIZE (16384)
+#define FREE_MEM_BUFFER_SIZE (16352)
 
 enum record_type_t
 {

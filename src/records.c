@@ -1,8 +1,6 @@
 #include "records.h"
 #include <string.h>
 
-__at (32768) struct name_info_t name_info;
-
 void records_init()
 {
     name_info.free_mem = name_info.mem;
@@ -47,10 +45,21 @@ void add_index(const char* host) __FASTCALL__
     {
         return;
     }
+
+    for (uint8_t i = 0; i < name_info.indexes_count; i++)
+    {
+        if (strcmp(name_info.indexes[i].host, host) == 0)
+        {
+            // we already have such index
+            return;
+        }
+    }
+
     if (name_info.indexes_count >= MAX_INDEXES)
     {
         return;
     }
+
     struct record_index_t* i = &name_info.indexes[name_info.indexes_count++];
     i->resolved = 0;
     strcpy(i->host, host);

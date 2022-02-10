@@ -17,7 +17,6 @@ ifneq (,$(JUST_PRINT))
 else
 	CC = zcc
 	LD = zcc
-	DEBUG = -debug
 	CFLAGS = +zx $(DEBUG) $(INCLUDES)
 	LINK_FLAGS = -L$(ROOT_DIR)/libs -llibs/libsocket_np.lib -llibs/libspectranet_np.lib
 	BIN_FLAGS = -startup=31 --no-crt -subtype=bin
@@ -27,11 +26,15 @@ endif
 
 all: spectranet-index
 
-build/spectranet-index: $(SPECTRANET_INDEX_C_OBJECTS) $(SPECTRANET_INDEX_ASM_OBJECTS)
+build/spectranet-index: build/fontlib__.bin.zx7 $(SPECTRANET_INDEX_C_OBJECTS) $(SPECTRANET_INDEX_ASM_OBJECTS)
 	$(LD) $(LDFLAGS) $(BIN_FLAGS) -o build/spectranet-index $(SPECTRANET_INDEX_FLAGS) $(SPECTRANET_INDEX_C_OBJECTS) $(SPECTRANET_INDEX_ASM_OBJECTS)
 
 build:
 	mkdir -p $@
+
+build/fontlib__.bin.zx7:
+	$(CC) $(CFLAGS) fontlib/text_ui_routines.asm -o build/fontlib --no-crt -subtype=bin -create-app
+	z88dk-zx7 build/fontlib__.bin
 
 include/spectranet:
 	@mkdir -p include/spectranet
