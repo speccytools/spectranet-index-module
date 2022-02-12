@@ -1,9 +1,21 @@
 EXTERN asm_zx_cxy2saddr
 EXTERN asm_zx_cxy2aaddr
 
+include "../include/spectranet.inc"
+include "../include/defs.inc"
+include "../include/stdmodules.inc"
+include "../include/fcntl.inc"
+include "../include/zxrom.inc"
+include "../include/sysvars.inc"
+include "../include/zxsysvars.inc"
+
 defc text_color = 32768
 
 org 0x1000
+
+page_a_table:
+    jp load_tnfs
+    jp text_ui_write
 
 ; stack: string to write
 ; stack: amount to write
@@ -12,15 +24,20 @@ org 0x1000
 ;     hl - current screen address
 ;     de - current characted data address
 ;     bc - current string address
-_text_ui_write:
-    pop de                          ; ret
+text_ui_write:
+    pop iy                          ; ret
 
-    pop ix                          ; pop the amount into ix
+    ld de, hl                       ; store string address into de for a bit
+    ld ix, 0xFF                     ; -1
 
-    pop bc                          ; y
-    ld h, c
-    pop bc
-    ld l, c                         ; x
+count_loop:
+    ld a, (hl)
+    inc hl
+    inc ixl
+    and a
+    jr nz, count_loop               ; string length is in ixl
+
+    pop hl                          ; yx
 
     push hl                         ; preserve yx for asm_zx_cxy2aaddr
     call asm_zx_cxy2aaddr           ; get color data addr
@@ -37,8 +54,8 @@ _text_ui_write_color_loop:          ; fill up color info
 
     pop hl                          ; restore hl to yx
     call asm_zx_cxy2saddr           ; hl now holds a screen address
-    pop bc                          ; pop string address into bc
-    push de                         ; ret
+    ld bc, de                       ; pop string address into bc
+    push iy                         ; ret
 
 _text_ui_write_loop:
     ; even
@@ -97,3 +114,29 @@ _text_ui_write_loop:
 
 font:
     binary "font_4x8_80columns.bin"
+
+load_tnfs:
+    ld a, 2                 ; mount the structure at ix first
+	call MOUNT
+	ret c
+
+    ld b, 0xFD			    ; get basic rom ID
+    ld hl, vectors		    ; start of vector table
+findcall6:
+    ld a, (hl)		        ; get ROM ID from table
+    and a			        ; check for terminator
+    ret z
+    inc l			        ; increment table pointer
+    cp 0xFD			        ; looking for basic rom ID
+    jr nz, findcall6
+
+    call SETPAGEB           ; switch page b to that page
+
+    ld hl, 0x200A
+    ld a, (hl)
+    ld ixl, a
+    inc hl
+    ld a, (hl)
+    ld ixh, a               ; load F_boot
+
+	jp (ix)                 ; let's go for it

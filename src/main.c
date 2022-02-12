@@ -2,6 +2,7 @@
 #include <strings.h>
 #include <arch/zx/spectrum.h>
 #include <compress/zx7.h>
+#include <stdlib.h>
 #include "records.h"
 #include "text.h"
 
@@ -79,6 +80,10 @@ static void resolve()
                         {
                             k = RESOLVE_KEY_HOST;
                         }
+                        else if (strcmp(key, "tags") == 0)
+                        {
+                            k = RESOLVE_KEY_TAGS;
+                        }
                         else
                         {
                             k = RESOLVE_KEY_UNKNOWN;
@@ -115,19 +120,178 @@ static void resolve()
     while (unresolved);
 }
 
+void clear()
+{
+#asm
+    ld a, 0
+    out (254), a
+#endasm
+    // clear screen
+    memset(0x4000, 0, 6144);
+    memset(0x5800, 0, 768);
+}
+
+static void render()
+{
+    clear();
+    text_pagein();
+    text_color = INK_GREEN | PAPER_BLACK | BRIGHT;
+    text_ui_write(UI_XY(0, 0), "SPECTRANET INDEX");
+    text_color = INK_WHITE | PAPER_BLACK;
+
+    if (*name_info.search)
+    {
+        text_color = INK_YELLOW | PAPER_BLACK | BRIGHT;
+        text_ui_write(UI_XY(0, 23), "QUERY:");
+        text_color = INK_WHITE | PAPER_BLACK;
+        text_ui_write(UI_XY(3, 23), name_info.search);
+    }
+    else
+    {
+        text_ui_write(UI_XY(0, 23), "[N]ext page [P]rev page [S]earch query");
+    }
+
+
+    {
+        char records[16];
+        strcpy(records, "Records: ");
+        itoa(name_info.record_count, records + 9, 10);
+
+        text_ui_write(UI_XY(24, 0), records);
+    }
+
+    if (name_info.page)
+    {
+        char pg[16];
+        strcpy(pg, "Page: ");
+        itoa(name_info.page + 1, pg + 6, 10);
+
+        text_ui_write(UI_XY(18, 0), pg);
+    }
+
+    struct record_t** record = name_info.results;
+    if (*record == NULL)
+    {
+        text_color = INK_RED | PAPER_BLACK | BRIGHT;
+        text_ui_write(UI_XY(10, 11), "No (more) results found");
+        return;
+    }
+
+    uint8_t y = 2;
+    uint8_t index = 0;
+    while (*record)
+    {
+        {
+            char num[2];
+            num[0] = '0' + index;
+            num[1] = 0;
+            text_color = INK_GREEN | PAPER_BLACK | BRIGHT;
+            text_ui_write(UI_XY(0, y), num);
+        }
+
+        if ((*record)->tags)
+        {
+            text_color = INK_YELLOW | PAPER_BLACK;
+            text_ui_write(UI_XY(16, y), (*record)->tags);
+        }
+
+        text_color = INK_WHITE | PAPER_BLACK | BRIGHT;
+        text_ui_write(UI_XY(1, y++), (*record)->host);
+
+        if ((*record)->title)
+        {
+            text_color = INK_WHITE | PAPER_BLACK;
+            text_ui_write(UI_XY(1, y++), (*record)->title);
+        }
+
+        index++;
+        record++;
+    }
+}
+
+static void search_into(char* buffer) __FASTCALL__ __naked
+{
+#asm
+    push hl
+    call 0x3E30 ;// CLEAR42
+    ld c, 32
+    pop de
+    call 0x3E6C ;// inputstring
+#endasm
+}
+
+extern uint8_t load_tnfs(const char* host) __FASTCALL__;
+
+static void process_key(char key) __FASTCALL__
+{
+    switch (key)
+    {
+        case 'n':
+        {
+            name_info.offset += MAX_RESULTS;
+            name_info.page++;
+            break;
+        }
+        case 'p':
+        {
+            if (name_info.offset == 0)
+            {
+                return;
+            }
+
+            name_info.offset -= MAX_RESULTS;
+            name_info.page--;
+            break;
+        }
+        case 's':
+        {
+            *name_info.search = 0;
+            search_into(name_info.search);
+
+            break;
+        }
+    }
+
+    if (key >= '0' && key <= '9')
+    {
+        uint8_t index = key - '0';
+        if (name_info.results[index])
+        {
+            if (load_tnfs(name_info.results[index]->host))
+            {
+                text_color = INK_RED | PAPER_BLACK | BRIGHT;
+                text_ui_write(UI_XY(0, 22), "Error: cannot mount.");
+            }
+            return;
+        }
+    }
+}
+
+static void loop()
+{
+    search();
+    render();
+
+#asm
+key_loop:
+    call 0x3E66 ;// getkey
+    or a
+    jr z, key_loop
+    ld h, 0
+    ld l, a
+    call _process_key
+    call 0x3E69 ;// keyup
+#endasm
+}
+
 void modulecall()
 {
     records_init();
     add_index("index.speccytools.org");
     resolve();
 
-    text_pagein();
-    struct record_t* record = name_info.first_record;
-    uint8_t y = 4;
-    text_color = INK_CYAN | PAPER_BLACK;
-    while (record)
+    while (1)
     {
-        text_ui_write(record->host, 1, y++, strlen(record->host));
-        record = record->next;
+        loop();
     }
 }

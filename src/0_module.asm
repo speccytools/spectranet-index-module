@@ -32,6 +32,8 @@ STR_identity:
 
 gdbserver_run:
     call STATEMENT_END              ; Check for statement end.
+    extern _clear
+    call _clear
     extern text_decompress
     call text_decompress
     extern _modulecall
