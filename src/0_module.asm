@@ -1,10 +1,13 @@
 
 include "../include/spectranet.inc"
+include "memory.inc"
+
+extern load_tnfs
 
 module_header:
     org 0x2000
     defb 0xAA               ; This is a code module.
-    defb 0xDB               ; This module has the identity 0xBC.
+    defb 0xDB               ; This module has the identity 0xDB.
     defw reset              ; The RESET vector - call a routine labeled reset.
     defw 0xFFFF             ; MOUNT vector - not used by this module
     defw 0xFFFF             ; Reserved
@@ -32,10 +35,32 @@ STR_identity:
 
 gdbserver_run:
     call STATEMENT_END              ; Check for statement end.
+
+    push ix
+    push iy
+
+    ld a, 0xDB
+    call RESERVEPAGE
+    ld (MODULE_PAGE_A_USED), a
+    call PUSHPAGEA
     extern _clear
     call _clear
     extern text_decompress
     call text_decompress
     extern _modulecall
     call _modulecall
+    ld a, (MODULE_PAGE_A_USED)
+    call FREEPAGE
+    call POPPAGEA
+
+    pop iy
+    pop ix
+
+    ld a, (TNFS_LOAD_URL)
+    and a
+    jr z, gdbserver_run_skip_tnfs_load
+
+    jp load_tnfs
+
+gdbserver_run_skip_tnfs_load:
     jp EXIT_SUCCESS

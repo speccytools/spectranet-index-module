@@ -8,14 +8,9 @@ include "../include/fcntl.inc"
 include "../include/zxrom.inc"
 include "../include/sysvars.inc"
 include "../include/zxsysvars.inc"
-
-defc text_color = 32768
+include "../src/memory.inc"
 
 org 0x1000
-
-page_a_table:
-    jp load_tnfs
-    jp text_ui_write
 
 ; stack: string to write
 ; stack: amount to write
@@ -44,7 +39,7 @@ count_loop:
     ld c, ixl                       ; get chars amount into ixl
     inc c                           ; divide it in half
     rr c                            ; with round top
-    ld a, (text_color)
+    ld a, (TEXT_COLOR)
 
 _text_ui_write_color_loop:          ; fill up color info
     ld (hl), a
@@ -114,29 +109,3 @@ _text_ui_write_loop:
 
 font:
     binary "font_4x8_80columns.bin"
-
-load_tnfs:
-    ld a, 2                 ; mount the structure at ix first
-	call MOUNT
-	ret c
-
-    ld b, 0xFD			    ; get basic rom ID
-    ld hl, vectors		    ; start of vector table
-findcall6:
-    ld a, (hl)		        ; get ROM ID from table
-    and a			        ; check for terminator
-    ret z
-    inc l			        ; increment table pointer
-    cp 0xFD			        ; looking for basic rom ID
-    jr nz, findcall6
-
-    call SETPAGEB           ; switch page b to that page
-
-    ld hl, 0x200A
-    ld a, (hl)
-    ld ixl, a
-    inc hl
-    ld a, (hl)
-    ld ixh, a               ; load F_boot
-
-	jp (ix)                 ; let's go for it

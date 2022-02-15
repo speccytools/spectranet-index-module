@@ -1,0 +1,6 @@
+
+defc ZX_SET_WORK = 0x16BF
+defc ZX_SET_MIN = 0x16B0
+defc ZX_STK_STORE = 0x2AB1
+defc ZX_LINE_RUN = 0x1B8A
+defc CALLBAS = 0x10

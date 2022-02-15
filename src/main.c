@@ -220,9 +220,7 @@ static void search_into(char* buffer) __FASTCALL__ __naked
 #endasm
 }
 
-extern uint8_t load_tnfs(const char* host) __FASTCALL__;
-
-static void process_key(char key) __FASTCALL__
+static uint8_t process_key(char key) __FASTCALL__
 {
     switch (key)
     {
@@ -236,7 +234,7 @@ static void process_key(char key) __FASTCALL__
         {
             if (name_info.offset == 0)
             {
-                return;
+                return 1;
             }
 
             name_info.offset -= MAX_RESULTS;
@@ -257,17 +255,15 @@ static void process_key(char key) __FASTCALL__
         uint8_t index = key - '0';
         if (name_info.results[index])
         {
-            if (load_tnfs(name_info.results[index]->host))
-            {
-                text_color = INK_RED | PAPER_BLACK | BRIGHT;
-                text_ui_write(UI_XY(0, 22), "Error: cannot mount.");
-            }
-            return;
+            strcpy(name_info.tnfs_load, name_info.results[index]->host);
+            return 0;
         }
     }
+
+    return 1;
 }
 
-static void loop()
+static uint8_t loop()
 {
     search();
     render();
@@ -280,8 +276,13 @@ key_loop:
     ld h, 0
     ld l, a
     call _process_key
+    ld l, a
+    and a
+    ret z
     call 0x3E69 ;// keyup
 #endasm
+
+    return 1;
 }
 
 void modulecall()
@@ -290,8 +291,5 @@ void modulecall()
     add_index("index.speccytools.org");
     resolve();
 
-    while (1)
-    {
-        loop();
-    }
+    while (loop()) ;
 }

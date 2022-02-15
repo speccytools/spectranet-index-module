@@ -3,6 +3,7 @@
 
 void records_init()
 {
+    *name_info.tnfs_load = 0;
     *name_info.search = 0;
     name_info.offset = 0;
     name_info.page = 0;

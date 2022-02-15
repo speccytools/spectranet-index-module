@@ -6,12 +6,12 @@ PUBLIC _text_pagein
 PUBLIC text_decompress
 
 include "../include/spectranet.inc"
-include "../page_a/page_a_functions.inc"
+include "memory.inc"
 
-defc _text_ui_write = text_ui_write
+defc _text_ui_write = 0x1000
 
 _text_pagein:
-    ld a, 0xC1
+    ld a, (MODULE_PAGE_A_USED)
     call SETPAGEA
     ret
 

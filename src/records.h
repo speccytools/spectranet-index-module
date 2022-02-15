@@ -29,6 +29,7 @@ struct record_t
 
 struct name_info_t
 {
+    char tnfs_load[64];
     uint8_t* free_mem;
     uint16_t free_mem_remaining;
     struct record_index_t indexes[MAX_INDEXES];
