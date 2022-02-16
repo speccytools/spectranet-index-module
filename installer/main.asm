@@ -11,7 +11,7 @@ STR_welcome:
     defb "Welcome to Spectranet Index installer!\n\n", 0
 
 STR_install_complete_message:
-    defb "Installing complete!\n\nReboot and use %index to start.\n", 0
+    defb "Installing complete!\n\nReboot and use type:\n\n!\n\n(excl.mark) to start.\n", 0
 
 STR_nmf_message:
     defb "Installing a new module...\n", 0

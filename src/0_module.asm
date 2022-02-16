@@ -21,7 +21,7 @@ _VERSION:
     defb "0.1", 0
 
 STR_spectranet_index:
-    defb "%index", 0
+    defb "!", 0
 
 basic_ext:
     defb 0x0B                       ; C Nonsense in BASIC
