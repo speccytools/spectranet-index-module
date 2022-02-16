@@ -18,7 +18,7 @@ module_header:
     defw STR_identity       ; Address of the identity string.
 
 _VERSION:
-    defb "0.2", 0
+    defb "0.1", 0
 
 STR_spectranet_index:
     defb "%index", 0
