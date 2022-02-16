@@ -1,7 +1,6 @@
 #include "extern.h"
 #include <strings.h>
 #include <arch/zx/spectrum.h>
-#include <stdlib.h>
 #include "records.h"
 #include "text.h"
 #include "version.h"
@@ -117,7 +116,10 @@ void resolve()
                     }
                     case RESOLVE_KEY_VERSION:
                     {
-                        name_info.update_available = strcmp(VERSION, values[RESOLVE_KEY_TITLE]);
+                        if (strcmp(VERSION, values[RESOLVE_KEY_TITLE]))
+                        {
+                            strcpy(name_info.tnfs_update, values[RESOLVE_KEY_HOST]);
+                        }
                         break;
                     }
                 }
@@ -137,10 +139,10 @@ void render()
     text_color = INK_GREEN | PAPER_BLACK | BRIGHT;
     text_ui_write(UI_XY(0, 0), "SPECTRANET INDEX");
 
-    if (name_info.update_available)
+    if (*name_info.tnfs_update)
     {
-        text_color = INK_BLACK | PAPER_GREEN | BRIGHT;
-        text_ui_write(UI_XY(9, 0), "MOD. UPD. AVAIL.");
+        text_color = INK_BLACK | PAPER_YELLOW | BRIGHT;
+        text_ui_write(UI_XY(9, 0), "[U] MOD.UPD.AVAIL.");
     }
 
     text_color = INK_WHITE | PAPER_BLACK;
@@ -154,32 +156,31 @@ void render()
     }
     else
     {
-        text_ui_write(UI_XY(0, 23), "[N]ext page [P]rev page [S]earch query");
+        text_ui_write(UI_XY(0, 23), "[N]ext page [P]rev page [S]earch");
     }
 
-
     {
-        char records[16];
-        strcpy(records, "Records: ");
-        itoa(name_info.record_count, records + 9, 10);
+        char records[16] = {0};
+        strcpy(records, "R:");
+        sitoa(records + 2, name_info.record_count);
 
         text_ui_write(UI_XY(24, 0), records);
     }
 
     if (name_info.page)
     {
-        char pg[16];
+        char pg[16] = {0};
         strcpy(pg, "Page: ");
-        itoa(name_info.page + 1, pg + 6, 10);
+        sitoa(pg + 6, name_info.page + 1);
 
-        text_ui_write(UI_XY(18, 0), pg);
+        text_ui_write(UI_XY(19, 0), pg);
     }
 
     struct record_t** record = name_info.results;
     if (*record == NULL)
     {
         text_color = INK_RED | PAPER_BLACK | BRIGHT;
-        text_ui_write(UI_XY(10, 11), "No (more) results found");
+        text_ui_write(UI_XY(10, 11), "No (more) results");
         return;
     }
 
@@ -241,6 +242,15 @@ uint8_t process_key(char key) __FASTCALL__
             *name_info.search = 0;
             search_into(name_info.search);
 
+            break;
+        }
+        case 'u':
+        {
+            if (*name_info.tnfs_update)
+            {
+                strcpy(name_info.tnfs_load, name_info.tnfs_update);
+                return 0;
+            }
             break;
         }
     }

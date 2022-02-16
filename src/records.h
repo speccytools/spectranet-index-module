@@ -30,6 +30,7 @@ struct record_t
 struct name_info_t
 {
     char tnfs_load[64];
+    char tnfs_update[64];
     uint8_t* free_mem;
     uint16_t free_mem_remaining;
     struct record_index_t indexes[MAX_INDEXES];
@@ -37,7 +38,6 @@ struct name_info_t
     uint8_t record_count;
     uint8_t page;
     uint8_t offset;
-    uint8_t update_available;
     struct record_t* first_record;
     struct record_t* last_record;
     uint8_t mem[FREE_MEM_BUFFER_SIZE];

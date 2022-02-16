@@ -4,10 +4,10 @@
 void records_init()
 {
     *name_info.tnfs_load = 0;
+    *name_info.tnfs_update = 0;
     *name_info.search = 0;
     name_info.offset = 0;
     name_info.page = 0;
-    name_info.update_available = 0;
     name_info.record_count = 0;
     name_info.free_mem = name_info.mem;
     name_info.free_mem_remaining = FREE_MEM_BUFFER_SIZE;

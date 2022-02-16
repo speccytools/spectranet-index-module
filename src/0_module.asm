@@ -3,6 +3,7 @@ include "../include/spectranet.inc"
 include "memory.inc"
 
 extern load_tnfs
+global _VERSION
 
 module_header:
     org 0x2000
@@ -15,6 +16,9 @@ module_header:
     defw 0xFFFF             ; Reserved
     defw 0xFFFF             ; Reserved
     defw STR_identity       ; Address of the identity string.
+
+_VERSION:
+    defb "0.2", 0
 
 STR_spectranet_index:
     defb "%index", 0
@@ -31,7 +35,7 @@ reset:
     ret
 
 STR_identity:
-    defb "Spectranet Search Index", 0
+    defb "Spectranet Index", 0
 
 STR_index0:
     defb "index.speccytools.org", 0

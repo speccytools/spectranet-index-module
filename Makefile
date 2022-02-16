@@ -3,6 +3,10 @@ SPECTRANET_INDEX_C_SOURCES=$(wildcard src/*.c)
 SPECTRANET_INDEX_C_OBJECTS=$(SPECTRANET_INDEX_C_SOURCES:.c=_c.o)
 SPECTRANET_INDEX_ASM_SOURCES=$(wildcard src/*.asm)
 SPECTRANET_INDEX_ASM_OBJECTS=$(SPECTRANET_INDEX_ASM_SOURCES:.asm=_asm.o)
+SPECTRANET_INDEX_INSTALLER_C_SOURCES=$(wildcard installer/*.c)
+SPECTRANET_INDEX_INSTALLER_C_OBJECTS=$(SPECTRANET_INDEX_INSTALLER_C_SOURCES:.c=_c.o)
+SPECTRANET_INDEX_INSTALLER_ASM_SOURCES=$(wildcard installer/*.asm)
+SPECTRANET_INDEX_INSTALLER_ASM_OBJECTS=$(SPECTRANET_INDEX_INSTALLER_ASM_SOURCES:.asm=_asm.o)
 INCLUDES=-I$(ROOT_DIR)/include/spectranet -I$(ROOT_DIR)/src
 FONTLIB_SOURCES=$(wildcard font/*.asm)
 JUST_PRINT:=$(findstring n,$(MAKEFLAGS))
@@ -15,20 +19,26 @@ ifneq (,$(JUST_PRINT))
 	FAKE_INCLUDES = -I/usr/local/share/z88dk/include
 	CFLAGS = $(FAKE_DEFINES) -nostdinc $(INCLUDES) $(FAKE_INCLUDES)
 	SPECTRANET_INDEX_FLAGS = -o build/SPECTRANET_INDEX
+	SPECTRANET_INDEX_INSTALLER_FLAGS = -o build/SPECTRANET_INDEX
 else
 	CC = zcc
 	LD = zcc
 	CFLAGS = +zx $(DEBUG) $(INCLUDES)
 	LINK_FLAGS = -L$(ROOT_DIR)/libs
-	BIN_FLAGS = -startup=31 --no-crt -subtype=bin
+	SPECTRANET_INDEX_BIN_FLAGS = -startup=31 --no-crt -subtype=bin
+	SPECTRANET_INDEX_INSTALLER_BIN_FLAGS =
 	LDFLAGS = +zx $(DEBUG) $(LINK_FLAGS)
 	SPECTRANET_INDEX_FLAGS = -create-app
+	SPECTRANET_INDEX_INSTALLER_FLAGS = -create-app
 endif
 
-all: spectranet-index
+all: spectranet-index-installer spectranet-index
 
 build/spectranet-index: build/fontlib__.bin.zx7 $(SPECTRANET_INDEX_C_OBJECTS) $(SPECTRANET_INDEX_ASM_OBJECTS)
-	$(LD) $(LDFLAGS) $(BIN_FLAGS) -o build/spectranet-index $(SPECTRANET_INDEX_FLAGS) $(SPECTRANET_INDEX_C_OBJECTS) $(SPECTRANET_INDEX_ASM_OBJECTS)
+	$(LD) $(LDFLAGS) $(SPECTRANET_INDEX_BIN_FLAGS) -o build/spectranet-index $(SPECTRANET_INDEX_FLAGS) $(SPECTRANET_INDEX_C_OBJECTS) $(SPECTRANET_INDEX_ASM_OBJECTS)
+
+build/spectranet-index-installer: spectranet-index $(SPECTRANET_INDEX_INSTALLER_C_OBJECTS) $(SPECTRANET_INDEX_INSTALLER_ASM_OBJECTS)
+	$(LD) $(LDFLAGS) $(SPECTRANET_INDEX_INSTALLER_BIN_FLAGS) -o build/spectranet-index-installer $(SPECTRANET_INDEX_INSTALLER_FLAGS) $(SPECTRANET_INDEX_INSTALLER_C_OBJECTS) $(SPECTRANET_INDEX_INSTALLER_ASM_OBJECTS)
 
 build:
 	mkdir -p $@
@@ -45,6 +55,9 @@ libs:
 
 spectranet-index: build build/spectranet-index
 
+spectranet-index-installer: build build/spectranet-index-installer
+	cp build/spectranet-index-installer tnfs/install.bin
+
 %_c.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
@@ -60,6 +73,8 @@ deploy:
 clean:
 	@rm -rf build/*
 	@rm -f src/*.o
+	@rm -f installer/*.o
+	@rm -f tnfs/install.bin
 
 .PHONY: clean get-size deploy
 
