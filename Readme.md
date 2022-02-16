@@ -10,6 +10,8 @@ Type the following:
 ```
 %mount 0,"boot.speccytools.org"
 %load""
+(reboot)
+! <hit enter>
 ```
 
 ## How does it work?
