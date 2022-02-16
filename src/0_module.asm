@@ -23,7 +23,7 @@ basic_ext:
     defb 0x0B                       ; C Nonsense in BASIC
     defw STR_spectranet_index       ; Pointer to string (null terminated)
     defb 0xFF                       ; This module
-    defw gdbserver_run              ; Address of routine to call
+    defw index_run                  ; Address of routine to call
 
 reset:
     ld hl, basic_ext                ; Pointer to the table entry to add
@@ -33,7 +33,19 @@ reset:
 STR_identity:
     defb "Spectranet Search Index", 0
 
-gdbserver_run:
+STR_index0:
+    defb "index.speccytools.org", 0
+
+index_run:
+    extern _clear
+    extern text_decompress
+    extern _records_init
+    extern _add_index
+    extern _resolve
+    extern _search
+    extern _render
+    extern _process_key
+
     call STATEMENT_END              ; Check for statement end.
 
     push ix
@@ -43,12 +55,29 @@ gdbserver_run:
     call RESERVEPAGE
     ld (MODULE_PAGE_A_USED), a
     call PUSHPAGEA
-    extern _clear
     call _clear
-    extern text_decompress
     call text_decompress
-    extern _modulecall
-    call _modulecall
+
+    call _records_init
+    ld hl, STR_index0
+    call _add_index
+    call _resolve
+
+index_run_loop:
+    call KEYUP
+    call _search
+    call _render
+index_run_key_loop:
+    call GETKEY
+    or a
+    jr z, index_run_key_loop
+    ld h, 0
+    ld l, a
+    call _process_key
+    ld l, a
+    and a
+    jr nz, index_run_loop
+
     ld a, (MODULE_PAGE_A_USED)
     call FREEPAGE
     call POPPAGEA
@@ -58,9 +87,9 @@ gdbserver_run:
 
     ld a, (TNFS_LOAD_URL)
     and a
-    jr z, gdbserver_run_skip_tnfs_load
+    jr z, index_run_skip_tnfs_load
 
     jp load_tnfs
 
-gdbserver_run_skip_tnfs_load:
+index_run_skip_tnfs_load:
     jp EXIT_SUCCESS

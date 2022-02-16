@@ -1,7 +1,9 @@
 #ifndef EXTERN_H
 #define EXTERN_H
 
+extern void clear();
 extern void print42(const char* s) __FASTCALL__;
+extern void search_into(char* buffer) __FASTCALL__;
 extern char* resolve_txt_records(const char* query) __FASTCALL__;
 
 #endif

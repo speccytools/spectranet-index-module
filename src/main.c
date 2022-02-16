@@ -1,7 +1,6 @@
 #include "extern.h"
 #include <strings.h>
 #include <arch/zx/spectrum.h>
-#include <compress/zx7.h>
 #include <stdlib.h>
 #include "records.h"
 #include "text.h"
@@ -15,7 +14,7 @@ enum resolve_record_key_t {
     RESOLVE_KEY_MAX
 };
 
-static void resolve()
+void resolve()
 {
     uint8_t unresolved;
 
@@ -120,18 +119,7 @@ static void resolve()
     while (unresolved);
 }
 
-void clear()
-{
-#asm
-    ld a, 0
-    out (254), a
-#endasm
-    // clear screen
-    memset(0x4000, 0, 6144);
-    memset(0x5800, 0, 768);
-}
-
-static void render()
+void render()
 {
     clear();
     text_pagein();
@@ -209,18 +197,7 @@ static void render()
     }
 }
 
-static void search_into(char* buffer) __FASTCALL__ __naked
-{
-#asm
-    push hl
-    call 0x3E30 ;// CLEAR42
-    ld c, 32
-    pop de
-    call 0x3E6C ;// inputstring
-#endasm
-}
-
-static uint8_t process_key(char key) __FASTCALL__
+uint8_t process_key(char key) __FASTCALL__
 {
     switch (key)
     {
@@ -261,35 +238,4 @@ static uint8_t process_key(char key) __FASTCALL__
     }
 
     return 1;
-}
-
-static uint8_t loop()
-{
-    search();
-    render();
-
-#asm
-key_loop:
-    call 0x3E66 ;// getkey
-    or a
-    jr z, key_loop
-    ld h, 0
-    ld l, a
-    call _process_key
-    ld l, a
-    and a
-    ret z
-    call 0x3E69 ;// keyup
-#endasm
-
-    return 1;
-}
-
-void modulecall()
-{
-    records_init();
-    add_index("index.speccytools.org");
-    resolve();
-
-    while (loop()) ;
 }
