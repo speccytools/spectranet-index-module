@@ -4,7 +4,7 @@ SPECTRANET_INDEX_C_OBJECTS=$(SPECTRANET_INDEX_C_SOURCES:.c=_c.o)
 SPECTRANET_INDEX_ASM_SOURCES=$(wildcard src/*.asm)
 SPECTRANET_INDEX_ASM_OBJECTS=$(SPECTRANET_INDEX_ASM_SOURCES:.asm=_asm.o)
 INCLUDES=-I$(ROOT_DIR)/include/spectranet -I$(ROOT_DIR)/src
-PAGEA_SOURCES=$(wildcard page_a/*.asm)
+FONTLIB_SOURCES=$(wildcard font/*.asm)
 JUST_PRINT:=$(findstring n,$(MAKEFLAGS))
 
 ifneq (,$(JUST_PRINT))
@@ -27,15 +27,15 @@ endif
 
 all: spectranet-index
 
-build/spectranet-index: build/pagea__.bin.zx7 $(SPECTRANET_INDEX_C_OBJECTS) $(SPECTRANET_INDEX_ASM_OBJECTS)
+build/spectranet-index: build/fontlib__.bin.zx7 $(SPECTRANET_INDEX_C_OBJECTS) $(SPECTRANET_INDEX_ASM_OBJECTS)
 	$(LD) $(LDFLAGS) $(BIN_FLAGS) -o build/spectranet-index $(SPECTRANET_INDEX_FLAGS) $(SPECTRANET_INDEX_C_OBJECTS) $(SPECTRANET_INDEX_ASM_OBJECTS)
 
 build:
 	mkdir -p $@
 
-build/pagea__.bin.zx7:
-	$(CC) $(CFLAGS) $(PAGEA_SOURCES) -o build/pagea --no-crt -subtype=bin -create-app
-	z88dk-zx7 build/pagea__.bin
+build/fontlib__.bin.zx7:
+	$(CC) $(CFLAGS) $(FONTLIB_SOURCES) -o build/fontlib --no-crt -subtype=bin -create-app
+	z88dk-zx7 build/fontlib__.bin
 
 include/spectranet:
 	@mkdir -p include/spectranet

@@ -4,15 +4,37 @@
 #include <stdlib.h>
 #include "records.h"
 #include "text.h"
+#include "version.h"
 
 enum resolve_record_key_t {
     RESOLVE_KEY_TYPE = 0,
     RESOLVE_KEY_HOST,
     RESOLVE_KEY_TITLE,
     RESOLVE_KEY_TAGS,
-    RESOLVE_KEY_UNKNOWN,
-    RESOLVE_KEY_MAX
+    RESOLVE_KEY_INDEX,
+    RESOLVE_KEY_TNFS,
+    RESOLVE_KEY_VERSION,
+    RESOLVE_KEY_UNKNOWN
 };
+
+#define RECORD_KEYS_MAX (RESOLVE_KEY_TAGS + 1)
+
+static const char* KEYMAP[] = {
+    "type", "host", "title", "tags", "index", "tnfs", "version", NULL
+};
+
+static uint8_t lookup_key(const char* key) __z88dk_fastcall
+{
+    for (uint8_t i = 0; KEYMAP[i]; i++)
+    {
+        if (strcmp(KEYMAP[i], key) == 0)
+        {
+            return i;
+        }
+    }
+
+    return RESOLVE_KEY_UNKNOWN;
+}
 
 void resolve()
 {
@@ -38,7 +60,7 @@ void resolve()
                 uint8_t txt_len = strlen(data);
                 char* sdata = data;
 
-                const char* values[RESOLVE_KEY_MAX];
+                const char* values[RECORD_KEYS_MAX];
                 memset(values, 0, sizeof(values));
 
                 const char* semicolon;
@@ -65,29 +87,7 @@ void resolve()
                         const char* value = equals + 1;
                         *(char*)(sdata + len) = 0;
 
-                        enum resolve_record_key_t k;
-
-                        if (strcmp(key, "type") == 0)
-                        {
-                            k = RESOLVE_KEY_TYPE;
-                        }
-                        else if (strcmp(key, "title") == 0)
-                        {
-                            k = RESOLVE_KEY_TITLE;
-                        }
-                        else if (strcmp(key, "host") == 0)
-                        {
-                            k = RESOLVE_KEY_HOST;
-                        }
-                        else if (strcmp(key, "tags") == 0)
-                        {
-                            k = RESOLVE_KEY_TAGS;
-                        }
-                        else
-                        {
-                            k = RESOLVE_KEY_UNKNOWN;
-                        }
-
+                        enum resolve_record_key_t k = lookup_key(key);
                         values[k] = value;
                     }
 
@@ -95,18 +95,30 @@ void resolve()
                 } while (semicolon);
 
                 const char* tt = values[RESOLVE_KEY_TYPE];
-                if (strcmp(tt, "index") == 0)
+                enum resolve_record_key_t ttv = lookup_key(tt);
+
+                switch (ttv)
                 {
-                    add_index(values[RESOLVE_KEY_HOST]);
-                    unresolved = 1;
-                }
-                else if (strcmp(tt, "tnfs") == 0)
-                {
-                    struct record_t* new_record = add_record(RECORD_TYPE_TNFS, values[RESOLVE_KEY_HOST]);
-                    if (new_record)
+                    case RESOLVE_KEY_INDEX:
                     {
-                        new_record->title = _strdup(values[RESOLVE_KEY_TITLE]);
-                        new_record->tags = _strdup(values[RESOLVE_KEY_TAGS]);
+                        add_index(values[RESOLVE_KEY_HOST]);
+                        unresolved = 1;
+                        break;
+                    }
+                    case RESOLVE_KEY_TNFS:
+                    {
+                        struct record_t* new_record = add_record(RECORD_TYPE_TNFS, values[RESOLVE_KEY_HOST]);
+                        if (new_record)
+                        {
+                            new_record->title = _strdup(values[RESOLVE_KEY_TITLE]);
+                            new_record->tags = _strdup(values[RESOLVE_KEY_TAGS]);
+                        }
+                        break;
+                    }
+                    case RESOLVE_KEY_VERSION:
+                    {
+                        name_info.update_available = strcmp(VERSION, values[RESOLVE_KEY_TITLE]);
+                        break;
                     }
                 }
 
@@ -121,10 +133,16 @@ void resolve()
 
 void render()
 {
-    clear();
     text_pagein();
     text_color = INK_GREEN | PAPER_BLACK | BRIGHT;
     text_ui_write(UI_XY(0, 0), "SPECTRANET INDEX");
+
+    if (name_info.update_available)
+    {
+        text_color = INK_BLACK | PAPER_GREEN | BRIGHT;
+        text_ui_write(UI_XY(9, 0), "MOD. UPD. AVAIL.");
+    }
+
     text_color = INK_WHITE | PAPER_BLACK;
 
     if (*name_info.search)

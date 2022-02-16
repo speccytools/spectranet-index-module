@@ -51,10 +51,11 @@ index_run:
     push ix
     push iy
 
-    ld a, 0xDB
+    ld a, 0xDB                      ; allocate a page for font rendering
     call RESERVEPAGE
-    ld (MODULE_PAGE_A_USED), a
-    call PUSHPAGEA
+    ld (PAGE_FONT_RENDER), a
+
+    call PUSHPAGEA                  ; preserve current page
     call _clear
     call text_decompress
 
@@ -66,6 +67,7 @@ index_run:
 index_run_loop:
     call KEYUP
     call _search
+    call _clear
     call _render
 index_run_key_loop:
     call GETKEY
@@ -78,9 +80,10 @@ index_run_key_loop:
     and a
     jr nz, index_run_loop
 
-    ld a, (MODULE_PAGE_A_USED)
+    ld a, (PAGE_FONT_RENDER)        ; free font render page
     call FREEPAGE
-    call POPPAGEA
+
+    call POPPAGEA                   ; restore original page A
 
     pop iy
     pop ix

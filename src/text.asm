@@ -11,12 +11,12 @@ include "memory.inc"
 defc _text_ui_write = 0x1000
 
 _text_pagein:
-    ld a, (MODULE_PAGE_A_USED)
+    ld a, (PAGE_FONT_RENDER)
     call SETPAGEA
     ret
 
 compressed_pagea:
-    binary "../build/pagea__.bin.zx7"
+    binary "../build/fontlib__.bin.zx7"
 
 text_decompress:
     call _text_pagein

@@ -37,6 +37,7 @@ struct name_info_t
     uint8_t record_count;
     uint8_t page;
     uint8_t offset;
+    uint8_t update_available;
     struct record_t* first_record;
     struct record_t* last_record;
     uint8_t mem[FREE_MEM_BUFFER_SIZE];
