@@ -77,5 +77,5 @@ mount_error:
     jp EXIT_SUCCESS
 
 MOUNT_ERROR_STR:
-    defb "An error occured. Make sure mount point 2 is free.\n", 0
+    defb "An error occured. Is mount point 2 free?\n", 0
 

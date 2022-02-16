@@ -94,9 +94,5 @@ index_run_key_loop:
 
     ld a, (TNFS_LOAD_URL)
     and a
-    jr z, index_run_skip_tnfs_load
-
-    jp load_tnfs
-
-index_run_skip_tnfs_load:
+    jp nz, load_tnfs
     jp EXIT_SUCCESS

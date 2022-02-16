@@ -202,7 +202,7 @@ void render()
             text_ui_write(UI_XY(16, y), (*record)->tags);
         }
 
-        text_color = INK_WHITE | PAPER_BLACK | BRIGHT;
+        text_color = INK_GREEN | PAPER_BLACK;
         text_ui_write(UI_XY(1, y++), (*record)->host);
 
         if ((*record)->title)

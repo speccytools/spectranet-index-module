@@ -41,8 +41,8 @@ struct name_info_t
     struct record_t* first_record;
     struct record_t* last_record;
     uint8_t mem[FREE_MEM_BUFFER_SIZE];
-    struct record_t* results[MAX_RESULTS + 1];
     char search[32];
+    struct record_t* results[MAX_RESULTS + 1];
 };
 
 extern struct name_info_t name_info;
