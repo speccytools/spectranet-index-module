@@ -40,6 +40,9 @@ STR_identity:
 STR_index0:
     defb "index.speccytools.org", 0
 
+STR_index1:
+    defb "tnfs.robertmorrison.me", 0
+
 STR_dns:
     defb "Looking...", 0
 
@@ -72,6 +75,8 @@ index_run:
     call _records_init
 
     ld hl, STR_index0               ; add indexes
+    call _add_index
+    ld hl, STR_index1
     call _add_index
 
     call CLEAR42
