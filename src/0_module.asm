@@ -40,6 +40,9 @@ STR_identity:
 STR_index0:
     defb "index.speccytools.org", 0
 
+STR_dns:
+    defb "Looking...", 0
+
 index_run:
     extern _clear
     extern text_decompress
@@ -59,14 +62,23 @@ index_run:
     call RESERVEPAGE
     ld (PAGE_FONT_RENDER), a
 
+    ld a, 0xDB                      ; allocate a page for dns requests
+    call RESERVEPAGE
+    ld (PAGE_DNS_REQUEST), a
+
     call PUSHPAGEA                  ; preserve current page
-    call _clear
     call text_decompress
 
     call _records_init
-    ld hl, STR_index0
+
+    ld hl, STR_index0               ; add indexes
     call _add_index
+
+    call CLEAR42
+    ld hl, STR_dns
+    call PRINT42
     call _resolve
+    call _clear
 
 index_run_loop:
     call KEYUP
@@ -85,6 +97,9 @@ index_run_key_loop:
     jr nz, index_run_loop
 
     ld a, (PAGE_FONT_RENDER)        ; free font render page
+    call FREEPAGE
+
+    ld a, (PAGE_DNS_REQUEST)        ; free dns requests page
     call FREEPAGE
 
     call POPPAGEA                   ; restore original page A

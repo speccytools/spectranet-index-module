@@ -52,6 +52,8 @@ void resolve()
             }
 
             char* ptr = resolve_txt_records(current_index->host);
+            if (ptr == NULL)
+                continue;
 
             char* data = 0x1000;
             while (data < ptr)

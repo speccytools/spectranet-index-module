@@ -1,6 +1,7 @@
 include "../include/spectranet.inc"
 include "../include/sysvars.inc"
 include "vars.inc"
+include "memory.inc"
 
 ;========================================================================
 ; F_dnsAquery
@@ -15,8 +16,8 @@ include "vars.inc"
 
 global _resolve_txt_records
 _resolve_txt_records:
-    ld a, 0xC0
-    call SETPAGEA                   ; set page to 0x0C
+    ld a, (PAGE_DNS_REQUEST)
+    call SETPAGEA
 
 	; set up the query string to resolve in the workspace area
 	ld de, buf_workspace+12	        ; write it after the header
