@@ -19,8 +19,21 @@ _resolve_txt_records:
     ld a, (PAGE_DNS_REQUEST)
     call SETPAGEA
 
+    ld ix, hl                       ; preserve query
+
+	ld c, SOCK_STREAM	            ; Open a TCP socket
+	call SOCKET
+	jp c, errorout			        ; bale out on error
+	ld (v_dnsfd), a		            ; save the file descriptor
+
+    ld de, (v_cur_resolver)
+    ld bc, dns_port
+    call CONNECT                    ; connect to the resolver over TCP
+    jp c, errorcleanup2
+
 	; set up the query string to resolve in the workspace area
-	ld de, buf_workspace+12	        ; write it after the header
+	ld de, buf_workspace+14	        ; write it after the header
+	ld hl, ix                       ; restore query
 	call F_dnsstring	            ; string to convert in hl
 
 	xor a
@@ -41,71 +54,50 @@ _resolve_txt_records:
 	ld (v_cur_resolver), hl	        ; and save it in sysvars area
 
 	call RAND16		                ; generate the DNS query ID
-	ld (buf_workspace), hl	        ; store it at the start of the workspace
+	ld (buf_workspace + 2), hl	    ; store it at the start of the workspace
 
 	ld hl, query		            ; start address of standard query data
-	ld de, buf_workspace+2	        ; destination
+	ld de, buf_workspace+4	        ; destination
 	ld bc, queryend-query	        ; bytes to copy
 	ldir			                ; build the query header
 
-	ld hl, dns_port		            ; set query UDP port
-	ld (v_dnssockinfo+4), hl        ; to port 53
-	ld hl, 0
-	ld (v_dnssockinfo+6), hl        ; make sure source port is unset
+    ld a, (v_querylength + 1)
+    ld (buf_workspace), a
+    ld a, (v_querylength)
+	ld (buf_workspace + 1), a	    ; store query length in big endian
 
-resolveloop2:
-	ld c, SOCK_DGRAM	            ; Open a UDP socket
-	call SOCKET
-
-	jp c, errorout			        ; bale out on error
-	ld (v_dnsfd), a		            ; save the file descriptor
-
-	ld hl, (v_cur_resolver)	        ; get pointer to current resolver address
-	ld de, v_dnssockinfo	        ; point de at sockinfo structure
-	ldi			                    ; copy the resolver's ip address
-	ldi
-	ldi
-	ldi
-
-	ld a, 3			                ; number of retries
-	ld (v_dnsretries), a
-sendquery2:
 	ld a, (v_dnsfd)
-	ld hl, v_dnssockinfo	        ; reset hl to the sockinfo structure
 	ld de, buf_workspace	        ; point de at the workspace
 	ld bc, (v_querylength)	        ; bc = length of query
-	call SENDTO		                ; send the block of data
+	inc bc                          ; bump it by two
+	inc bc
+	call SEND		                ; send the block of data
 	jr c, errorcleanup2	            ; recover if there's an error
 
-	; Wait for only a finite amount of time before giving up
-	call F_waitfordnsmsg
-	jr nc, getresponse2
-	ld a, (v_dnsretries)
-	dec a
-	ld (v_dnsretries), a
-	jr nz, sendquery2
-	jr errorcleanup2	            ; retries exhausted
+resolve_txt_records_recv:
+    ld a, (v_dnsfd)
+    ld de, buf_workspace
+    ld bc, 2
+    call RECV                       ; ask for response size
+	jr c, errorcleanup2	            ; recover if there's an error
 
-getresponse2:
+	ld a, (buf_workspace+1)         ; read how many data there is
+	ld e, a
+	ld a, (buf_workspace)           ; in big endian
+	ld d, a
+
+	ld hl, PAGE_A_SIZE
+	sbc hl, de
+    jr c, errorcleanup2             ; we cannot handle more than PAGE_A_SIZE
+
 	ld a, (v_dnsfd)
-	ld hl, v_dnssockinfo	        ; reset hl to the socket info structure
+	ld bc, de		                ; spell how much to request
 	ld de, PAGE_A_ADDR	            ; set de to the message buffer
-	ld bc, PAGE_A_SIZE		        ; maximum message size
-	call RECVFROM
+	call RECV
 	jr c, errorcleanup2
 
 	ld a, (v_dnsfd)
 	call CLOSE
-
-	ld hl, buf_workspace	        ; compare the serial number of
-	ld de, PAGE_A_ADDR	            ; the sent query and received
-	ld a, (de)		                ; answer to check that
-	cpi			                    ; they are the same. If they
-	jr nz, errorout		            ; are different this indicates something
-	inc e			                ; is seriously borked.
-	ld a, (de)
-	cpi
-	jr nz, errorout
 
 	ld a, (PAGE_A_ADDR + dns_bitfield2)
 	and 0x0F		                ; Did we successfully resolve something?
@@ -233,26 +225,6 @@ done3:
 	pop hl			; get current address pointer
 	inc hl			; add 1 - hl points at next byte after end
 	ret			; finished.
-
-;------------------------------------------------------------------------
-; F_waitfordnsmsg
-; Polls for a response from the DNS server to implement a timeout.
-
-F_waitfordnsmsg:
-	ld bc, dns_polltime
-loop5:
-	ld a, (v_dnsfd)
-	push bc
-	call POLLFD
-	pop bc
-	ret nz			; data ready
-	dec bc
-	ld a, b
-	or c
-	jr nz, loop5
-	scf			; indicate timeout
-	ret
-
 
 query:           defb 0x01,0x00  ; 16 bit flags field - std. recursive query
 qdcount:         defb 0x00,0x01  ; we only ever ask one question at a time
