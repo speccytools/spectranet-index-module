@@ -48,3 +48,6 @@ The following types are supported:
 
 One index can refer to another one, thus providing a way to maintain a list of TNFS resources
 by several independent parties.
+
+## How to submit a TNFS resource?
+If you want to add a resource to the list, or you want to maintain an additional index, join the tg group here: [@index_speccytools_org](https://t.me/index_speccytools_org)
