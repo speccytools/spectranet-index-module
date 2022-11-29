@@ -14,6 +14,10 @@ Type the following:
 ! <hit enter>
 ```
 
+## I don't see anything (0 records)
+
+Make sure you spectrum uses tcp-enabled DNS, e.g. `8.8.8.8`
+
 ## How does it work?
 
 It uses DNS (TXT) records of several indexes.
