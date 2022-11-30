@@ -14,6 +14,8 @@ Just load up the TAP file from [latest release](https://github.com/speccytools/s
 ! <hit enter>
 ```
 
+This this tool installs itself as a Spectranet Module, it's going to remain installed unless you manually delete it. So `!` command would work every time.
+
 ## I don't see anything (0 records)
 
 Make sure you spectrum uses tcp-enabled DNS, e.g. `8.8.8.8`
