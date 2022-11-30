@@ -118,7 +118,7 @@ void resolve()
                     }
                     case RESOLVE_KEY_VERSION:
                     {
-                        if (strcmp(VERSION, values[RESOLVE_KEY_TITLE]))
+                        if (strcmp(VERSION, values[RESOLVE_KEY_TITLE]) < 0)
                         {
                             strcpy(name_info.tnfs_update, values[RESOLVE_KEY_HOST]);
                         }
