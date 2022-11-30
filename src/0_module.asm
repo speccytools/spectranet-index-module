@@ -18,7 +18,7 @@ module_header:
     defw STR_identity       ; Address of the identity string.
 
 _VERSION:
-    defb "0.3", 0
+    defb "0.4", 0
 
 STR_spectranet_index:
     defb "!", 0
@@ -44,7 +44,7 @@ STR_index1:
     defb "tnfs.robertmorrison.me", 0
 
 STR_dns:
-    defb "Looking...", 0
+    defb "Looking...\n", 0
 
 index_run:
     extern _clear

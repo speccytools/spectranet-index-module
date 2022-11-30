@@ -14,6 +14,27 @@ include "memory.inc"
 ; Returns   : HL = NULL (error) or a pointer past last byte of series of null-terminated strings
 ;
 
+STR_connecting_to:
+    defb "\n-> ", 0
+
+resolve_dns1:
+    defb 8,8,8,8
+
+resolve_dns2:
+    defb 208,67,220,220
+
+resolve_dns3:
+    defb 9,9,9,9
+
+resolve_dns4:
+    defb 1,1,1,1
+
+connect_to_dns:
+    ld a, (v_dnsfd)
+    ld bc, dns_port
+    jp CONNECT
+
+
 global _resolve_txt_records
 _resolve_txt_records:
     ld a, (PAGE_DNS_REQUEST)
@@ -21,16 +42,35 @@ _resolve_txt_records:
 
     ld ix, hl                       ; preserve query
 
+    ld hl, STR_connecting_to
+    call PRINT42
+    ld hl, ix
+    call PRINT42
+
 	ld c, SOCK_STREAM	            ; Open a TCP socket
 	call SOCKET
 	jp c, errorout			        ; bale out on error
 	ld (v_dnsfd), a		            ; save the file descriptor
 
-    ld de, (v_cur_resolver)
-    ld bc, dns_port
-    call CONNECT                    ; connect to the resolver over TCP
-    jp c, errorcleanup2
+    ld de, resolve_dns1
+    call connect_to_dns
+    jr nc, _resolved
 
+    ld de, resolve_dns2
+    call connect_to_dns
+    jr nc, _resolved
+
+    ld de, resolve_dns3
+    call connect_to_dns
+    jr nc, _resolved
+
+    ld de, resolve_dns4
+    call connect_to_dns
+    jr nc, _resolved
+
+    jp errorcleanup2
+
+_resolved:
 	; set up the query string to resolve in the workspace area
 	ld de, buf_workspace+14	        ; write it after the header
 	ld hl, ix                       ; restore query
