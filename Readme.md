@@ -6,7 +6,7 @@ Decentralised TNFS index Spectranet module for ZX Spectrum.
 
 ## How to install?
 
-Just load up the TAP file from [latest release](https://github.com/speccytools/spectranet-index-module/releases/latest). Alternatively, type the following:
+Type the following:
 ```
 %mount 0,"boot.speccytools.org"
 %load""
@@ -14,11 +14,9 @@ Just load up the TAP file from [latest release](https://github.com/speccytools/s
 ! <hit enter>
 ```
 
+Alternatively, load up the TAP file from [latest release](https://github.com/speccytools/spectranet-index-module/releases/latest).
+
 This this tool installs itself as a Spectranet Module, it's going to remain installed unless you manually delete it. So `!` command would work every time.
-
-## I don't see anything (0 records)
-
-Make sure you spectrum uses tcp-enabled DNS, e.g. `8.8.8.8`
 
 ## How does it work?
 
