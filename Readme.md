@@ -16,7 +16,7 @@ Type the following:
 
 Alternatively, load up the TAP file from [latest release](https://github.com/speccytools/spectranet-index-module/releases/latest).
 
-This this tool installs itself as a Spectranet Module, it's going to remain installed unless you manually delete it. So `!` command would work every time.
+This tool installs itself as a Spectranet Module, it's going to remain installed unless you manually delete it. So `!` command would work every time.
 
 ## How does it work?
 
